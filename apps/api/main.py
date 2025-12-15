@@ -41,7 +41,7 @@ async def get_openai_recommendation(movies: List[Movie]):
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a movie recommendation expert. And you will only respond with what I ask. Nothing more, nothing less"},
-                {"role": "user", "content": f"Given the following movies and my ratings, recommend me a new movie to watch. The movies are: {movie_list}. Each movie must be a JSON object with the following keys: id, title, year, image, rating, and director. Respond ONLY with a JSON array."}
+                {"role": "user", "content": f"Given the following movies and my ratings, recommend me a new movie to watch. The movies are: {movie_list}. Include the movies in the prompt in the output json file. Each movie must be a JSON object with the following keys: id, title, year, image, rating, and director. Respond ONLY with a JSON array."}
             ]
         )
         return response.choices[0].message.content

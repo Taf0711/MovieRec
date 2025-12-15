@@ -1,111 +1,143 @@
 "use client";
 
-import React, { useState } from 'react';
-
-interface Movie {
-  title: string;
-  rating: number;
-}
+import React, { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
 const ReviewsPage: React.FC = () => {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [title, setTitle] = useState('');
-  const [rating, setRating] = useState<number | ''>('');
-
-  const handleAddMovie = () => {
-    if (title && rating !== '') {
-      const newMovie: Movie = { title, rating: Number(rating) };
-      setMovies([...movies, newMovie]);
-      setTitle('');
-      setRating('');
-    }
-  };
-
-  const handleSubmit = async () => {
-    try {
-      const response = await fetch("http://localhost:8000/api/recs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          movies: movies,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log("Success:", result);
-    } catch (error) {
-      console.error("Error submitting reviews:", error);
-    }
-   };
+  const [rating, setRating] = useState(0);
+  const [scale1, setScale1] = useState<number | null | undefined>(undefined);
+  const [scale2, setScale2] = useState<number | null | undefined>(undefined);
+  const [scale3, setScale3] = useState<number | null | undefined>(undefined);
 
   return (
-    <div className="flex min-h-screen items-start justify-center bg-zinc-50 font-sans dark:bg-black pt-16">
-      <main className="flex flex-col items-center justify-center p-8 w-full max-w-2xl">
-        <h1 className="text-4xl font-bold text-black dark:text-white mb-8">Rate Movies</h1>
-        
-        <div className="w-full mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="Movie Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="flex-grow h-12 rounded-md px-4 bg-white dark:bg-zinc-800 text-black dark:text-white border border-solid border-black/[.08] dark:border-white/[.145] focus:outline-none focus:ring-2 focus:ring-blue-500"
+    <main className="min-h-screen bg-[#242730] text-white px-10 py-8 font-sans">
+      <Link href="/movies">
+        <div className="mb-6 cursor-pointer hover:underline">
+          ← Return to Description Page
+        </div>
+      </Link>
+      <div className="flex flex-col lg:flex-row gap-12">
+        <div className="w-full lg:w-1/2">
+          <div className="relative w-full h-[520px] bg-black rounded-lg overflow-hidden flex items-center justify-center">
+            <Image
+              src="/images/arcane.jpg"
+              alt="Arcane Season 2"
+              fill
+              className="object-contain"
+              priority
             />
-            <input
-              type="number"
-              placeholder="Rating (1-10)"
-              value={rating}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || (Number(val) >= 1 && Number(val) <= 10)) {
-                  setRating(val === '' ? '' : Number(val));
-                }
-              }}
-              min="1"
-              max="10"
-              className="h-12 w-full sm:w-32 rounded-md px-4 bg-white dark:bg-zinc-800 text-black dark:text-white border border-solid border-black/[.08] dark:border-white/[.145] focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={handleAddMovie}
-              className="h-12 w-full sm:w-auto px-6 rounded-md bg-blue-600 text-white font-medium transition-colors hover:bg-blue-700"
-            >
-              Add Movie
-            </button>
+          </div>
+          <div className="mt-6">
+            <h1 className="text-3xl font-bold">Arcane Season 2</h1>
+            <p className="text-gray-400 mt-1">2025</p>
+
+            <p className="text-gray-400 mt-2">
+              <span className="text-gray-300 font-semibold">Genres:</span>{" "}
+              Animation, Action, Drama
+            </p>
+            <div className="mt-8">
+              <p className="mb-2 font-semibold">Give a rating</p>
+              <div className="flex gap-2 text-3xl">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setRating(star)}
+                    className={
+                      star <= rating
+                        ? "text-yellow-400"
+                        : "text-gray-600"
+                    }
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="w-full">
-          <h2 className="text-2xl font-bold text-black dark:text-white mb-4">Your Movies</h2>
-          {movies.length > 0 ? (
-            <ul className="space-y-4">
-              {movies.map((movie, index) => (
-                <li key={index} className="flex justify-between items-center p-4 rounded-md bg-white dark:bg-zinc-800 border border-solid border-black/[.08] dark:border-white/[.145]">
-                  <span className="text-lg text-black dark:text-white">{movie.title}</span>
-                  <span className="text-lg font-bold text-blue-600">{movie.rating} / 10</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-zinc-600 dark:text-zinc-400">You haven't added any movies yet.</p>
-          )}
-        </div>
-
-        {movies.length > 0 && (
-          <div className="w-full mt-8">
-            <button
-              onClick={handleSubmit}
-              className="h-12 w-full px-6 rounded-md bg-green-600 text-white font-medium transition-colors hover:bg-green-700"
-            >
-              Submit Reviews
-            </button>
+        <div className="w-full lg:w-1/2 border-l border-gray-600 pl-10">
+          <div className="space-y-8">
+            <Question
+              title="On a scale from 1 to 10 how likely are you to…"
+              subtitle="watch something from this director again?"
+              value={scale1}
+              setValue={setScale1}
+            />
+            <Question
+              subtitle="watch something from the same genre?"
+              value={scale2}
+              setValue={setScale2}
+            />
+            <Question
+              subtitle="watch this movie again?"
+              value={scale3}
+              setValue={setScale3}
+            />
+            <div>
+              <p className="font-semibold mb-2">
+                Was this a recommendation? If so, was it a good one?
+              </p>
+              <input
+                type="text"
+                placeholder="Not sure"
+                className="w-full h-12 px-4 rounded-md bg-[#2f3340] border border-gray-600 text-white focus:outline-none"
+              />
+            </div>
+            <div>
+              <p className="font-semibold mb-2">Write down your review</p>
+              <textarea
+                placeholder="Write your review here"
+                className="w-full h-40 px-4 py-3 rounded-md bg-[#2f3340] border border-gray-600 text-white resize-none focus:outline-none"
+              />
+            </div>
           </div>
-        )}
-      </main>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+const Question = ({
+  title,
+  subtitle,
+  value,
+  setValue,
+}: {
+  title?: string;
+  subtitle: string;
+  value: number | null | undefined;
+  setValue: (n: number | null) => void;
+}) => {
+  return (
+    <div>
+      {title && <p className="font-semibold mb-1">{title}</p>}
+      <p className="text-gray-300 mb-3">{subtitle}</p>
+      <div className="flex items-center gap-4">
+        <div className="flex gap-4 text-xl font-semibold">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+            <button
+              key={n}
+              onClick={() => setValue(n)}
+              className={`transition-colors ${value === n
+                ? "text-[#58b8ff]"
+                : "text-gray-500 hover:text-gray-300"
+                }`}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setValue(null)}
+          className={`ml-auto text-sm font-semibold transition-colors ${value === null
+            ? "text-[#58b8ff]"
+            : "text-gray-500 hover:text-gray-300"
+            }`}
+        >
+          Not sure
+        </button>
+      </div>
     </div>
   );
 };

@@ -9,12 +9,15 @@ interface Movie {
   rating: number;
 }
 
+
 const RecommendationsPage: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([
     { id: 1, title: "", rating: 5 },
     { id: 2, title: "", rating: 5 },
     { id: 3, title: "", rating: 5 },
   ]);
+
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiResponse, setAiResponse] = useState<string>("");
@@ -46,8 +49,33 @@ const RecommendationsPage: React.FC = () => {
     return validMovies.length >= 3;
   };
 
-  const getRecommendations = async () => {};
-  const retryRecommendation = async () => {};
+  const getRecommendations = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:8000/api/recs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          movies: movies,
+        }),
+      });
+      if (!res.ok) {
+        throw new Error("Failed to fetch data");
+      }
+      const data = await res.json();
+      setAiResponse(data.recommendation);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const retryRecommendation = () => {
+    getRecommendations();
+  };
 
   const isGetButtonDisabled = isLoading || !hasMinimumMovies();
 

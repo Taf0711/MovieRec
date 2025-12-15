@@ -41,7 +41,8 @@ async def get_openai_recommendation(movies: List[Movie]):
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a movie recommendation expert. And you will only respond with what I ask. Nothing more, nothing less"},
-                {"role": "user", "content": f"Given the following movies and my ratings, recommend me a new movie to watch. The movies are: {movie_list}. Include the movies in the prompt in the output json file. Each movie must be a JSON object with the following keys: id, title, year, image, rating, and director. Respond ONLY with a JSON array."}
+                {"role": "user", "content": f"Given the following movies and my ratings, recommend me a new movie to watch. The movies are: {movie_list}. Give me a list of movies and explain why the user will enjoy it in a sentence. Do not wrap the title in *" }
+                
             ]
         )
         return response.choices[0].message.content
@@ -57,17 +58,17 @@ async def get_recommendations(movie_recs: MovieRecs):
         
         global movie_result_json
         movie_result_json = recommendation_json
-        #print(recommendation_json)
+        print(recommendation_json)
         return {"recommendation": recommendation_json}
 
     except Exception as err:
         print(err)
         return {"error": "Something went wrong with API recommendation request."}
 
-@app.get("/api/recs")
-def get_recs():
-    print(movie_result_json)
-    return {"movies": movie_result_json}
+# @app.get("/api/recs")
+# def get_recs():
+#     print(movie_result_json)
+#     return {"movies": movie_result_json}
 
 @app.get("/items/{item_id}")
 def read_item(item_id: int):

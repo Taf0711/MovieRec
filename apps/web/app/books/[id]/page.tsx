@@ -5,8 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Book, User, Calendar, Tag, Plus, Bookmark, MessageSquare, ExternalLink } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_URL } from '../../../lib/fetcher';
 
 interface Author {
   name: string;

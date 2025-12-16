@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Star, Film, Book, Send, Check, Search } from 'lucide-react';
 import { useAuth } from '../../lib/AuthContext';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+import { API_URL } from '../../lib/fetcher';
 
 interface MediaItem {
   id: number | string;

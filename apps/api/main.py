@@ -112,7 +112,12 @@ async def get_optional_user(authorization: Optional[str] = Header(None)):
         return None
     try:
         return await get_current_user(authorization)
-    except:
+    except HTTPException:
+        # Expected when user is not authenticated or token is invalid
+        return None
+    except Exception as e:
+        # Log unexpected errors but don't crash - user just won't be authenticated
+        print(f"Unexpected auth error in get_optional_user: {e}")
         return None
 
 # ============ EXISTING OPENAI RECOMMENDATION ENDPOINT ============
@@ -422,8 +427,12 @@ async def get_book_details(book_id: str):
                                 "bio": author_data.get("bio", {}).get("value") if isinstance(author_data.get("bio"), dict) else author_data.get("bio"),
                                 "photo": f"https://covers.openlibrary.org/a/olid/{author_key.split('/')[-1]}-M.jpg"
                             })
-                    except:
-                        pass
+                    except (httpx.RequestError, httpx.HTTPStatusError) as e:
+                        # Network or HTTP errors - skip this author but continue with others
+                        print(f"Failed to fetch author {author_key}: {e}")
+                    except (KeyError, TypeError, ValueError) as e:
+                        # Data parsing errors - skip this author but continue with others
+                        print(f"Failed to parse author data for {author_key}: {e}")
             
             # Get cover
             cover_id = None

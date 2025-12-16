@@ -378,37 +378,6 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link
-            href="/recommend"
-            className="p-4 bg-[#1E1E2E] rounded-xl border border-white/5 hover:border-[#58b8ff]/50 transition-colors text-center"
-          >
-            <span className="text-2xl mb-2 block">✨</span>
-            <span className="text-sm font-medium">Get Recommendations</span>
-          </Link>
-          <Link
-            href="/movies"
-            className="p-4 bg-[#1E1E2E] rounded-xl border border-white/5 hover:border-purple-500/50 transition-colors text-center"
-          >
-            <span className="text-2xl mb-2 block">🎬</span>
-            <span className="text-sm font-medium">Browse Movies</span>
-          </Link>
-          <Link
-            href="/books"
-            className="p-4 bg-[#1E1E2E] rounded-xl border border-white/5 hover:border-green-500/50 transition-colors text-center"
-          >
-            <span className="text-2xl mb-2 block">📚</span>
-            <span className="text-sm font-medium">Browse Books</span>
-          </Link>
-          <Link
-            href="/reviews"
-            className="p-4 bg-[#1E1E2E] rounded-xl border border-white/5 hover:border-yellow-500/50 transition-colors text-center"
-          >
-            <span className="text-2xl mb-2 block">⭐</span>
-            <span className="text-sm font-medium">Write Review</span>
-          </Link>
-        </div>
       </div>
     </div>
   );

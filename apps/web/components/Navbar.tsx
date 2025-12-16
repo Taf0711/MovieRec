@@ -25,9 +25,16 @@ const Navbar: React.FC = () => {
   ];
 
   const handleSignOut = async () => {
-    await signOut();
-    setIsOpen(false);
-    router.push("/");
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Sign out failed:', err);
+    } finally {
+      setIsOpen(false);
+      router.push("/");
+      // Force a refresh to clear any cached state
+      router.refresh();
+    }
   };
 
   return (

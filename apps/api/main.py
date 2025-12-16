@@ -29,14 +29,15 @@ if SUPABASE_URL and SUPABASE_SERVICE_KEY:
 
 app = FastAPI()
 
-# CORS configuration - add your Vercel domain here after deployment
+# CORS configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 origins = [
     "http://localhost:3000",
     "http://localhost:3001",
+    "https://movie-rec-frontend-six.vercel.app",  # Production frontend
 ]
-# Add production frontend URL if set
-if FRONTEND_URL:
+# Add additional frontend URL from env if set
+if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
 app.add_middleware(

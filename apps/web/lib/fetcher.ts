@@ -1,6 +1,8 @@
 // helper funcs for fetching
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+// Remove trailing slash from API URL to prevent double-slash issues
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+export const API_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 

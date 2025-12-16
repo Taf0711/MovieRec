@@ -517,7 +517,7 @@ async def get_trending_books():
         return cached
     
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             # Open Library trending/popular books
             response = await client.get(
                 "https://openlibrary.org/trending/daily.json",
@@ -540,9 +540,40 @@ async def get_trending_books():
             result = {"results": books}
             cache.set("trending_books", result)
             return result
+    except httpx.TimeoutException:
+        print(f"Open Library API timeout - returning fallback data")
+        # Return fallback popular books
+        fallback = {
+            "results": [
+                {"id": "OL82563W", "title": "1984", "author": "George Orwell", "cover_url": "https://covers.openlibrary.org/b/id/7222246-M.jpg", "first_publish_year": 1949},
+                {"id": "OL7353617M", "title": "To Kill a Mockingbird", "author": "Harper Lee", "cover_url": "https://covers.openlibrary.org/b/id/8226691-M.jpg", "first_publish_year": 1960},
+                {"id": "OL27482W", "title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "cover_url": "https://covers.openlibrary.org/b/id/7222261-M.jpg", "first_publish_year": 1925},
+                {"id": "OL262758W", "title": "Pride and Prejudice", "author": "Jane Austen", "cover_url": "https://covers.openlibrary.org/b/id/8760472-M.jpg", "first_publish_year": 1813},
+                {"id": "OL98479W", "title": "The Catcher in the Rye", "author": "J.D. Salinger", "cover_url": "https://covers.openlibrary.org/b/id/8193701-M.jpg", "first_publish_year": 1951},
+                {"id": "OL27516W", "title": "Harry Potter and the Philosopher's Stone", "author": "J.K. Rowling", "cover_url": "https://covers.openlibrary.org/b/id/10521270-M.jpg", "first_publish_year": 1997},
+            ]
+        }
+        cache.set("trending_books", fallback, ttl=300)  # Cache for 5 minutes
+        return fallback
     except Exception as e:
         print(f"Open Library API error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch trending books")
+        # Try to return any existing cache even if expired
+        old_cached = cache.get("trending_books")
+        if old_cached:
+            print("Returning stale cache due to API error")
+            return old_cached
+        # Return fallback as last resort
+        fallback = {
+            "results": [
+                {"id": "OL82563W", "title": "1984", "author": "George Orwell", "cover_url": "https://covers.openlibrary.org/b/id/7222246-M.jpg", "first_publish_year": 1949},
+                {"id": "OL7353617M", "title": "To Kill a Mockingbird", "author": "Harper Lee", "cover_url": "https://covers.openlibrary.org/b/id/8226691-M.jpg", "first_publish_year": 1960},
+                {"id": "OL27482W", "title": "The Great Gatsby", "author": "F. Scott Fitzgerald", "cover_url": "https://covers.openlibrary.org/b/id/7222261-M.jpg", "first_publish_year": 1925},
+                {"id": "OL262758W", "title": "Pride and Prejudice", "author": "Jane Austen", "cover_url": "https://covers.openlibrary.org/b/id/8760472-M.jpg", "first_publish_year": 1813},
+                {"id": "OL98479W", "title": "The Catcher in the Rye", "author": "J.D. Salinger", "cover_url": "https://covers.openlibrary.org/b/id/8193701-M.jpg", "first_publish_year": 1951},
+                {"id": "OL27516W", "title": "Harry Potter and the Philosopher's Stone", "author": "J.K. Rowling", "cover_url": "https://covers.openlibrary.org/b/id/10521270-M.jpg", "first_publish_year": 1997},
+            ]
+        }
+        return fallback
 
 # ============ USER PROFILE ENDPOINTS ============
 @app.get("/api/user/profile")

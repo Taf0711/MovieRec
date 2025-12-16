@@ -20,6 +20,7 @@ openai_client = OpenAI(api_key=api_key) if api_key else None
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 TMDB_API_KEY = os.getenv("TMDB_API_KEY")
 
 # Initialize Supabase client
@@ -116,11 +117,12 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         # Try alternative method using JWT decoding
         try:
             from jose import jwt, JWTError
-            # Get JWT secret from Supabase (it's derived from the service key)
-            # For Supabase, we can verify the JWT using the service role key
+            # Use the JWT secret to verify the token
+            # Supabase signs JWTs with the JWT_SECRET
+            jwt_secret = SUPABASE_JWT_SECRET if SUPABASE_JWT_SECRET else SUPABASE_SERVICE_KEY
             payload = jwt.decode(
                 token,
-                SUPABASE_SERVICE_KEY,
+                jwt_secret,
                 algorithms=["HS256"],
                 options={"verify_aud": False}  # Supabase doesn't always use aud
             )

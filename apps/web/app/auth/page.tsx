@@ -34,7 +34,14 @@ const AuthPage: React.FC = () => {
         // Sign In
         const { error } = await signIn(email, password);
         if (error) {
-          setError(error.message || "Failed to sign in");
+          // Provide more helpful error messages
+          if (error.message?.includes('Invalid API key') || error.message?.includes('invalid_api_key')) {
+            setError("Authentication service not configured. Please contact support.");
+          } else if (error.message?.includes('Invalid login credentials')) {
+            setError("Invalid email or password. Please try again.");
+          } else {
+            setError(error.message || "Failed to sign in");
+          }
         } else {
           router.push("/profile");
         }
@@ -54,7 +61,12 @@ const AuthPage: React.FC = () => {
 
         const { error } = await signUp(email, password);
         if (error) {
-          setError(error.message || "Failed to sign up");
+          // Provide more helpful error messages
+          if (error.message?.includes('Invalid API key') || error.message?.includes('invalid_api_key')) {
+            setError("Authentication service not configured. Please contact support.");
+          } else {
+            setError(error.message || "Failed to sign up");
+          }
         } else {
           setMessage("Check your email for a confirmation link!");
           setEmail("");

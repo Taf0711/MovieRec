@@ -1,211 +1,290 @@
-// import Image from "next/image";
-
-// async function getData() {
-//   const res = await fetch("http://localhost:8000/", { cache: 'no-store' });
-//   if (!res.ok) {
-//     throw new Error('Failed to fetch data');
-//   }
-//   return res.text();
-// }
-
-// export default async function Home() {
-//   const data = await getData();
-
-//   return (
-//     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-//       <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between bg-white px-16 py-32 dark:bg-black sm:items-start">
-//         <Image
-//           className="dark:invert"
-//           src="/next.svg"
-//           alt="Next.js logo"
-//           width={100}
-//           height={20}
-//           priority
-//         />
-//         <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-//           <div>
-//             <h1>Frontend + FastAPI</h1>
-//             <pre>{data}</pre>
-//           </div>
-
-//           <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-//             To get started, edit the page.tsx file.
-//           </h1>
-//           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-//             Looking for a starting point or more instructions? Head over to{" "}
-//             <a
-//               href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Templates
-//             </a>{" "}
-//             or the{" "}
-//             <a
-//               href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//               className="font-medium text-zinc-950 dark:text-zinc-50"
-//             >
-//               Learning
-//             </a>{" "}
-//             center.
-//           </p>
-//         </div>
-//         <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-//           <a
-//             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-//             href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             <Image
-//               className="dark:invert"
-//               src="/vercel.svg"
-//               alt="Vercel logomark"
-//               width={16}
-//               height={16}
-//             />
-//             Deploy Now
-//           </a>
-//           <a
-//             className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-//             href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-//             target="_blank"
-//             rel="noopener noreferrer"
-//           >
-//             Documentation
-//           </a>
-//         </div>
-//       </main>
-//     </div>
-//   );
-// }
-
-
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useAuth } from '../lib/AuthContext';
+import { getTrendingMovies, getTrendingShows, getTrendingBooks } from '../lib/fetcher';
+import { Star, TrendingUp, Book, Film, Tv } from 'lucide-react';
 
-const movies = [
-  { id: 'batman', title: 'The Batman', year: 2022, image: '/images/thebatman.jpg' },
-  { id: 'spiderman', title: 'Spider-Man Homecoming', year: 2017, image: '/images/spiderman_homecoming.jpg' },
-  { id: 'aquaman', title: 'Aquaman and the Lost Kingdom', year: 2023, image: '/images/aquaman_lost_kingdom.jpg' },
-];
+interface TrendingMovie {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date: string;
+  vote_average: number;
+  overview?: string;
+}
+
+interface TrendingBook {
+  id: string;
+  title: string;
+  author: string;
+  cover_url: string | null;
+  first_publish_year: number;
+}
 
 const HomePage: React.FC = () => {
+  const { user } = useAuth();
+  const [trendingMovies, setTrendingMovies] = useState<TrendingMovie[]>([]);
+  const [trendingShows, setTrendingShows] = useState<TrendingMovie[]>([]);
+  const [trendingBooks, setTrendingBooks] = useState<TrendingBook[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTrending() {
+      try {
+        const [movies, shows, books] = await Promise.all([
+          getTrendingMovies(),
+          getTrendingShows(),
+          getTrendingBooks(),
+        ]);
+        setTrendingMovies(movies);
+        setTrendingShows(shows);
+        setTrendingBooks(books);
+      } catch (error) {
+        console.error('Failed to fetch trending data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTrending();
+  }, []);
+
+  const displayName = user?.email?.split('@')[0] || 'Guest';
+
   return (
-    <div className="min-h-screen bg-[#242730] text-white px-10 py-8 font-sans">
+    <div className="min-h-screen bg-[#242730] text-white px-6 md:px-10 py-8 font-sans">
       {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-5xl font-extrabold tracking-tight">
-          Hello, <span className="text-[#58b8ff]">Guest!</span>
+      <header className="mb-10 pl-12">
+        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+          Hello, <span className="text-[#58b8ff]">{displayName}!</span>
         </h1>
         <p className="text-zinc-400 mt-2 text-lg">
-          Review and get recommendations for what you like...
+          Discover trending movies, shows, and books...
         </p>
       </header>
 
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Left Section */}
-        <div>
-          <Section title="Popular Films/Shows This Month" />
-          <Section title="Popular Books This Month" />
-        </div>
-
-        {/* Middle Section */}
-        <div className="border-x border-gray-600 px-6">
-          <CarouselSection title="Have you already watched these?" items={movies} />
-          <CarouselSection
-            title="Because you liked Superman..."
-            highlight="Superman"
-            items={movies}
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Section - Trending Movies */}
+        <div className="space-y-8">
+          <TrendingSection
+            title="Trending Movies"
+            icon={<Film size={20} />}
+            items={trendingMovies}
+            loading={loading}
+            type="movie"
+          />
+          <TrendingSection
+            title="Trending Shows"
+            icon={<Tv size={20} />}
+            items={trendingShows}
+            loading={loading}
+            type="show"
           />
         </div>
 
-        {/* Right Section */}
+        {/* Middle Section - Featured */}
+        <div className="lg:border-x border-gray-700/50 lg:px-6">
+          <section className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp size={20} className="text-[#58b8ff]" />
+              <h2 className="text-xl font-bold">This Week&apos;s Picks</h2>
+            </div>
+            
+            {loading ? (
+              <LoadingGrid count={3} />
+            ) : (
+              <div className="space-y-4">
+                {trendingMovies.slice(0, 3).map((movie, index) => (
+                  <Link
+                    key={movie.id}
+                    href={`/movies/${movie.id}`}
+                    className="flex gap-4 p-3 bg-[#1E1E2E] rounded-xl hover:bg-[#2a2d3a] transition-colors"
+                  >
+                    <div className="relative w-20 h-28 rounded-lg overflow-hidden bg-gray-700 flex-shrink-0">
+                      {movie.poster_path ? (
+                        <Image
+                          src={movie.poster_path}
+                          alt={movie.title}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          <Film size={24} />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-[#58b8ff] font-semibold">#{index + 1} Trending</span>
+                      <h3 className="font-semibold text-white mt-1 truncate">{movie.title}</h3>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {movie.release_date?.split('-')[0]}
+                      </p>
+                      <div className="flex items-center gap-1 mt-2">
+                        <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm text-gray-300">{movie.vote_average?.toFixed(1)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+        </div>
+
+        {/* Right Section - Books */}
         <div>
-          <Section title="Our Weekly Recommendations" />
+          <BooksSection
+            title="Trending Books"
+            books={trendingBooks}
+            loading={loading}
+          />
         </div>
       </div>
     </div>
   );
 };
 
-export default HomePage;
-
-type CarouselItem = {
-  id: string;
+// Trending Movies/Shows Section
+const TrendingSection: React.FC<{
   title: string;
-  year: number;
-  image: string;
+  icon: React.ReactNode;
+  items: TrendingMovie[];
+  loading: boolean;
+  type: 'movie' | 'show';
+}> = ({ title, icon, items, loading, type }) => {
+  return (
+    <section>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-[#58b8ff]">{icon}</span>
+        <h2 className="text-xl font-bold">{title}</h2>
+      </div>
+
+      {loading ? (
+        <LoadingGrid count={4} />
+      ) : (
+        <div className="relative">
+          <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+            {items.slice(0, 6).map((item) => (
+              <Link
+                key={item.id}
+                href={`/movies/${item.id}`}
+                className="flex-none w-36 group"
+              >
+                <div className="relative w-36 h-52 rounded-lg overflow-hidden bg-gray-700 group-hover:ring-2 ring-[#58b8ff] transition-all">
+                  {item.poster_path ? (
+                    <Image
+                      src={item.poster_path}
+                      alt={item.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-500">
+                      <Film size={32} />
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2 bg-black/70 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                    <Star size={10} className="text-yellow-400 fill-yellow-400" />
+                    {item.vote_average?.toFixed(1)}
+                  </div>
+                </div>
+                <p className="text-sm font-medium mt-2 leading-tight line-clamp-2 group-hover:text-[#58b8ff] transition-colors">
+                  {item.title}
+                </p>
+                <p className="text-xs text-gray-400">{item.release_date?.split('-')[0]}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="absolute top-0 right-0 h-52 w-12 bg-gradient-to-l from-[#242730] to-transparent pointer-events-none" />
+        </div>
+      )}
+    </section>
+  );
 };
 
-const CarouselSection: React.FC<{
+// Books Section
+const BooksSection: React.FC<{
   title: string;
-  items: CarouselItem[];
-  highlight?: string;
-}> = ({ title, items, highlight }) => {
+  books: TrendingBook[];
+  loading: boolean;
+}> = ({ title, books, loading }) => {
   return (
-    <section className="mb-10">
-      <h2 className="text-xl font-bold mb-3">
-        {title.split(highlight || '').map((part, i, arr) =>
-          i < arr.length - 1 ? (
-            <React.Fragment key={i}>
-              {part}
-              <span className="text-[#58b8ff]">{highlight}</span>
-            </React.Fragment>
-          ) : (
-            part
-          )
-        )}
-      </h2>
+    <section>
+      <div className="flex items-center gap-2 mb-4">
+        <Book size={20} className="text-[#58b8ff]" />
+        <h2 className="text-xl font-bold">{title}</h2>
+      </div>
 
-      <div className="relative">
-        {/* Scrollable row */}
-        <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
-          {items.map((movie) => (
-            <Link
-              key={movie.id}
-              href={`/movies/${movie.id}`}
-              className="flex-none w-40 hover:scale-105 transition-transform"
-            >
-              <div className="relative w-40 h-56 rounded-lg overflow-hidden bg-gray-700">
-                <Image
-                  src={movie.image}
-                  alt={movie.title}
-                  fill
-                  className="object-cover"
-                />
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex gap-3 animate-pulse">
+              <div className="w-16 h-24 bg-gray-700 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-700 rounded w-3/4" />
+                <div className="h-3 bg-gray-700 rounded w-1/2" />
               </div>
-              <p className="text-sm font-semibold mt-2 leading-tight">
-                {movie.title}
-              </p>
-              <p className="text-xs text-gray-400">{movie.year}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {books.slice(0, 8).map((book) => (
+            <Link
+              key={book.id}
+              href={`/books/${book.id}`}
+              className="flex gap-3 p-2 rounded-lg hover:bg-[#1E1E2E] transition-colors group"
+            >
+              <div className="relative w-14 h-20 rounded-md overflow-hidden bg-gray-700 flex-shrink-0">
+                {book.cover_url ? (
+                  <Image
+                    src={book.cover_url}
+                    alt={book.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    <Book size={20} />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-medium line-clamp-2 group-hover:text-[#58b8ff] transition-colors">
+                  {book.title}
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">{book.author}</p>
+                {book.first_publish_year && (
+                  <p className="text-xs text-gray-500">{book.first_publish_year}</p>
+                )}
+              </div>
             </Link>
           ))}
         </div>
-
-        {/* Right gradient fade */}
-        <div className="absolute top-0 right-0 h-full w-16 bg-gradient-to-l from-[#242730] to-transparent pointer-events-none" />
-      </div>
+      )}
     </section>
   );
 };
 
-
-const Section: React.FC<{ title: string }> = ({ title }) => {
+// Loading Grid
+const LoadingGrid: React.FC<{ count: number }> = ({ count }) => {
   return (
-    <section className="mb-10">
-      <h2 className="text-xl font-bold mb-3">{title}</h2>
-      <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="flex-none w-40 h-56 bg-gray-400 rounded-lg opacity-40"
-          ></div>
-        ))}
-      </div>
-    </section>
+    <div className="flex gap-4 overflow-hidden">
+      {[...Array(count)].map((_, i) => (
+        <div key={i} className="flex-none w-36 animate-pulse">
+          <div className="w-36 h-52 bg-gray-700 rounded-lg" />
+          <div className="h-4 bg-gray-700 rounded mt-2 w-3/4" />
+          <div className="h-3 bg-gray-700 rounded mt-1 w-1/2" />
+        </div>
+      ))}
+    </div>
   );
 };
+
+export default HomePage;

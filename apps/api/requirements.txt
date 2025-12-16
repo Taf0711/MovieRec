@@ -2,3 +2,6 @@ fastapi
 uvicorn
 openai
 python-dotenv
+supabase
+httpx
+python-jose[cryptography]

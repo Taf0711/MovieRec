@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { API_URL } from "../../lib/fetcher";
 
 interface Movie {
   id: number;
@@ -53,21 +54,26 @@ const RecommendationsPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/recs", {
+      // Filter out movies without titles
+      const validMovies = movies.filter((movie) => movie.title.trim() !== "");
+      
+      const res = await fetch(`${API_URL}/api/recs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          movies: movies,
+          movies: validMovies.map((m) => ({ title: m.title, rating: m.rating })),
         }),
       });
       if (!res.ok) {
-        throw new Error("Failed to fetch data");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch: ${res.status}`);
       }
       const data = await res.json();
-      setAiResponse(data.recommendation);
+      setAiResponse(data.recommendation || "No recommendations received");
     } catch (err) {
+      console.error("Recommendation error:", err);
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);

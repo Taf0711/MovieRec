@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -23,7 +23,7 @@ interface MediaItem {
   media_type: 'movie' | 'tv' | 'book';
 }
 
-const ReviewsPage: React.FC = () => {
+const ReviewsContent: React.FC = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, session } = useAuth();
@@ -478,6 +478,27 @@ const ScaleQuestion: React.FC<{
         </button>
       </div>
     </div>
+  );
+};
+
+// Loading fallback for Suspense
+function ReviewsLoading() {
+  return (
+    <div className="min-h-screen bg-[#242730] text-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-[#58b8ff] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-400">Loading reviews...</p>
+      </div>
+    </div>
+  );
+}
+
+// Main page component with Suspense boundary
+const ReviewsPage: React.FC = () => {
+  return (
+    <Suspense fallback={<ReviewsLoading />}>
+      <ReviewsContent />
+    </Suspense>
   );
 };
 

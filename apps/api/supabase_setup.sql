@@ -169,3 +169,4 @@ BEGIN
     RAISE NOTICE 'RLS policies enabled for all tables';
 END $$;
 
+

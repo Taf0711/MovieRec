@@ -166,9 +166,13 @@ export async function getMovies() {
   }
 
   const data = await res.json(); 
-  console.log("movies value:", data.movies);
-  console.log("movies type:", typeof data.movies);
-  const raw = data.movies; 
+  // Backend returns { recommendation: string }, not { movies: string }
+  const raw = data.recommendation;
+  
+  if (!raw || typeof raw !== 'string') {
+    console.error("Invalid recommendation response:", data);
+    throw new Error("Invalid recommendation response from API");
+  }
 
   const cleaned = raw
     .replace(/```json\s*/i, "") 
@@ -177,7 +181,6 @@ export async function getMovies() {
   const movies = JSON.parse(cleaned);
 
   console.log("parsed movies:", movies);
-  console.log(movies[0].title);
 
   return movies;
 }

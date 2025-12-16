@@ -6,7 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "../../lib/AuthContext";
 import { getUserProfile, getUserReviews, getUserLists, getUserStats } from "../../lib/fetcher";
-import { User, Star, Film, Book, Heart, Clock, Edit2, LogOut } from "lucide-react";
+import { User, Star, Film, Book, Heart, Clock, Edit2, LogOut, BookOpen } from "lucide-react";
 
 interface Review {
   id: string;
@@ -49,6 +49,7 @@ const ProfilePage: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [watchlist, setWatchlist] = useState<ListItem[]>([]);
   const [favorites, setFavorites] = useState<ListItem[]>([]);
+  const [readingList, setReadingList] = useState<ListItem[]>([]);
   const [stats, setStats] = useState<UserStats>({ total_reviews: 0, total_movies: 0, total_books: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -59,14 +60,18 @@ const ProfilePage: React.FC = () => {
     }
 
     async function fetchUserData() {
-      if (!session?.access_token) return;
+      if (!session?.access_token) {
+        setLoading(false);
+        return;
+      }
 
       try {
-        const [profileData, reviewsData, watchlistData, favoritesData, statsData] = await Promise.allSettled([
+        const [profileData, reviewsData, watchlistData, favoritesData, readingListData, statsData] = await Promise.allSettled([
           getUserProfile(session.access_token),
           getUserReviews(session.access_token),
           getUserLists(session.access_token, "watchlist"),
           getUserLists(session.access_token, "favorites"),
+          getUserLists(session.access_token, "reading_list"),
           getUserStats(session.access_token),
         ]);
 
@@ -74,6 +79,7 @@ const ProfilePage: React.FC = () => {
         if (reviewsData.status === "fulfilled") setReviews(reviewsData.value);
         if (watchlistData.status === "fulfilled") setWatchlist(watchlistData.value);
         if (favoritesData.status === "fulfilled") setFavorites(favoritesData.value);
+        if (readingListData.status === "fulfilled") setReadingList(readingListData.value);
         if (statsData.status === "fulfilled") setStats(statsData.value);
       } catch (error) {
         console.error("Failed to fetch user data:", error);
@@ -179,7 +185,7 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
           {/* Recent Reviews */}
           <div className="bg-[#1E1E2E] rounded-xl p-6 border border-white/5">
             <div className="flex items-center gap-2 mb-4">
@@ -320,6 +326,53 @@ const ProfilePage: React.FC = () => {
                 icon={<Heart size={32} />}
                 message="No favorites yet"
                 action={{ label: "Browse Content", href: "/movies" }}
+              />
+            )}
+          </div>
+
+          {/* Reading List */}
+          <div className="bg-[#1E1E2E] rounded-xl p-6 border border-white/5">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen size={20} className="text-green-400" />
+              <h2 className="text-lg font-semibold">Reading List</h2>
+            </div>
+
+            {loading ? (
+              <LoadingSkeleton count={3} />
+            ) : readingList.length > 0 ? (
+              <div className="space-y-3">
+                {readingList.slice(0, 5).map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 p-2 bg-[#2a2d3a] rounded-lg"
+                  >
+                    <div className="w-10 h-14 bg-gray-700 rounded overflow-hidden flex-shrink-0">
+                      {item.image_url ? (
+                        <Image
+                          src={item.image_url}
+                          alt={item.title}
+                          width={40}
+                          height={56}
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Book size={16} className="text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-xs text-gray-500 capitalize">Book</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={<BookOpen size={32} />}
+                message="No books in reading list"
+                action={{ label: "Browse Books", href: "/books" }}
               />
             )}
           </div>

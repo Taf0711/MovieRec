@@ -4,8 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Book, User, Calendar, Tag, Plus, Bookmark, MessageSquare, ExternalLink } from 'lucide-react';
-import { API_URL } from '../../../lib/fetcher';
+import { ArrowLeft, Book, User, Calendar, Tag, Plus, Bookmark, MessageSquare, ExternalLink, Check, Loader2 } from 'lucide-react';
+import { API_URL, addToList } from '../../../lib/fetcher';
+import { useAuth } from '../../../lib/AuthContext';
 
 interface Author {
   name: string;
@@ -29,10 +30,53 @@ interface BookDetails {
 const BookDetailPage: React.FC = () => {
   const params = useParams();
   const id = params.id as string;
+  const { user, session } = useAuth();
   
   const [details, setDetails] = useState<BookDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Button states
+  const [addingToFavorites, setAddingToFavorites] = useState(false);
+  const [addedToFavorites, setAddedToFavorites] = useState(false);
+  const [addingToReadingList, setAddingToReadingList] = useState(false);
+  const [addedToReadingList, setAddedToReadingList] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleAddToList = async (listType: 'favorites' | 'reading_list') => {
+    if (!user || !session?.access_token) {
+      setActionError('Please sign in to add to your list');
+      setTimeout(() => setActionError(null), 3000);
+      return;
+    }
+    
+    if (!details) return;
+    
+    const setAdding = listType === 'favorites' ? setAddingToFavorites : setAddingToReadingList;
+    const setAdded = listType === 'favorites' ? setAddedToFavorites : setAddedToReadingList;
+    
+    setAdding(true);
+    setActionError(null);
+    
+    try {
+      await addToList(session.access_token, {
+        list_type: listType,
+        media_type: 'book',
+        media_id: String(details.id),
+        title: details.title,
+        image_url: details.cover_url || undefined,
+      });
+      
+      setAdded(true);
+      setTimeout(() => setAdded(false), 3000);
+    } catch (err) {
+      console.error('Error adding to list:', err);
+      setActionError('Failed to add to list. Please try again.');
+      setTimeout(() => setActionError(null), 3000);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -154,13 +198,41 @@ const BookDetailPage: React.FC = () => {
                   <ExternalLink size={18} />
                   View on Open Library
                 </a>
-                <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1E1E2E] border border-gray-700 rounded-xl font-semibold hover:bg-[#2a2d3a] transition">
-                  <Plus size={18} />
-                  Add to List
+                <button
+                  onClick={() => handleAddToList('favorites')}
+                  disabled={addingToFavorites || addedToFavorites}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition ${
+                    addedToFavorites
+                      ? 'bg-green-500 text-white'
+                      : 'bg-[#1E1E2E] border border-gray-700 hover:bg-[#2a2d3a]'
+                  }`}
+                >
+                  {addingToFavorites ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : addedToFavorites ? (
+                    <Check size={18} />
+                  ) : (
+                    <Plus size={18} />
+                  )}
+                  {addedToFavorites ? 'Added to Favorites!' : 'Add to Favorites'}
                 </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-3 bg-[#1E1E2E] border border-gray-700 rounded-xl font-semibold hover:bg-[#2a2d3a] transition">
-                  <Bookmark size={18} />
-                  Add to Reading List
+                <button
+                  onClick={() => handleAddToList('reading_list')}
+                  disabled={addingToReadingList || addedToReadingList}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition ${
+                    addedToReadingList
+                      ? 'bg-green-500 text-white'
+                      : 'bg-[#1E1E2E] border border-gray-700 hover:bg-[#2a2d3a]'
+                  }`}
+                >
+                  {addingToReadingList ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : addedToReadingList ? (
+                    <Check size={18} />
+                  ) : (
+                    <Bookmark size={18} />
+                  )}
+                  {addedToReadingList ? 'Added to Reading List!' : 'Add to Reading List'}
                 </button>
                 <Link
                   href={`/reviews?id=${details.id}&type=book`}
@@ -169,6 +241,14 @@ const BookDetailPage: React.FC = () => {
                   <MessageSquare size={18} />
                   Rate or Review
                 </Link>
+                {actionError && (
+                  <p className="text-red-400 text-sm text-center">{actionError}</p>
+                )}
+                {!user && (
+                  <p className="text-zinc-500 text-sm text-center">
+                    <Link href="/auth" className="text-[#58b8ff] hover:underline">Sign in</Link> to save to your lists
+                  </p>
+                )}
               </div>
             </div>
 

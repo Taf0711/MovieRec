@@ -1,14 +1,15 @@
 # Nixpacks configuration for Railway
+providers = ["python"]
+
 [phases.setup]
 nixPkgs = ["python310"]
 
 [phases.install]
 cmds = ["pip install -r requirements.txt"]
 
-[start]
-cmd = "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
-
-# Don't run any Python code during build
 [phases.build]
 cmds = []
+
+[start]
+cmd = "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
 

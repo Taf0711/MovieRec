@@ -29,10 +29,15 @@ if SUPABASE_URL and SUPABASE_SERVICE_KEY:
 
 app = FastAPI()
 
+# CORS configuration - add your Vercel domain here after deployment
+FRONTEND_URL = os.getenv("FRONTEND_URL", "")
 origins = [
     "http://localhost:3000",
     "http://localhost:3001",
 ]
+# Add production frontend URL if set
+if FRONTEND_URL:
+    origins.append(FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,

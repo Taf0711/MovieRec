@@ -81,14 +81,14 @@ class UserProfile(BaseModel):
     avatar_url: Optional[str] = None
 
 class Review(BaseModel):
-    media_type: str  # 'movie' or 'book'
+    media_type: str  # 'movie', 'tv', or 'book'
     media_id: str
     rating: int
     review_text: Optional[str] = None
 
 class ListItem(BaseModel):
     list_type: str  # 'watchlist', 'favorites', 'reading_list'
-    media_type: str  # 'movie' or 'book'
+    media_type: str  # 'movie', 'tv', or 'book'
     media_id: str
     title: str
     image_url: Optional[str] = None

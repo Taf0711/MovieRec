@@ -103,14 +103,42 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=500, detail="Supabase not configured")
     
     try:
-        # Verify JWT with Supabase
-        user = supabase.auth.get_user(token)
-        if not user or not user.user:
+        # Verify JWT token directly using Supabase admin client
+        # The service key allows us to verify user tokens
+        response = supabase.auth.get_user(token)
+        
+        if not response or not response.user:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return user.user
+        
+        return response.user
     except Exception as e:
         print(f"Auth error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid token")
+        # Try alternative method using JWT decoding
+        try:
+            from jose import jwt, JWTError
+            # Get JWT secret from Supabase (it's derived from the service key)
+            # For Supabase, we can verify the JWT using the service role key
+            payload = jwt.decode(
+                token,
+                SUPABASE_SERVICE_KEY,
+                algorithms=["HS256"],
+                options={"verify_aud": False}  # Supabase doesn't always use aud
+            )
+            
+            user_id = payload.get("sub")
+            if not user_id:
+                raise HTTPException(status_code=401, detail="Invalid token payload")
+            
+            # Create a minimal user object
+            class User:
+                def __init__(self, user_id, email=None):
+                    self.id = user_id
+                    self.email = email or payload.get("email")
+            
+            return User(user_id)
+        except JWTError as jwt_error:
+            print(f"JWT decode error: {jwt_error}")
+            raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_optional_user(authorization: Optional[str] = Header(None)):
     """Get user if authenticated, otherwise return None"""
